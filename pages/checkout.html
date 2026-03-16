@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ολοκλήρωση Αγοράς - Poulki Shop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/accessibility.css">
+    <script>
+        // Apply cached branding immediately (before page renders)
+        try {
+            const cached = localStorage.getItem('branding_cache');
+            if (cached) {
+                const branding = JSON.parse(cached);
+                if (branding.logo_path) {
+                    document.write('<style>.logo { min-width: 60px; }</style>');
+                }
+            }
+        } catch (e) {}
+    </script>
+</head>
+<body>
+    <header>
+        <a href="../index.html" class="logo">Poulki Shop</a>
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-search">
+                    <form id="searchForm" class="search-form">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Αναζήτηση...">
+                        <button type="submit" class="search-btn">Αναζήτηση</button>
+                    </form>
+                </div>
+                <div class="nav-controls">
+                    <button class="accessibility-toggle" id="accessibilityToggle" aria-label="Λειτουργία Προσβασιμότητας" title="Κάντε κλικ για ενεργοποίηση της λειτουργίας προσβασιμότητας"><span>A</span> </button>
+                    <select id="languageToggle" class="language-select" aria-label="Γλώσσα">
+                        <option value="el">EL</option>
+                        <option value="en">EN</option>
+                    </select>
+                    <a href="cart.html" class="nav-link">
+                        <span class="cart-icon">Καλάθι</span>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                    <button class="hamburger-menu" id="hamburgerMenu" aria-label="Μενού">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-item">Αρχική</a>
+                <li>
+                    <a href="#" class="nav-item">Προϊόντα
+                        <i class='bx bxs-chevron-down products-arrow arrow'></i>
+                    </a>
+                    <ul class="products-sub-menu sub-menu" id="productsSubMenu">
+                    </ul>
+                </li>
+                <a href="about.html" class="nav-item">Σχετικά</a>
+                <a href="my-orders.html" class="nav-item">Παραγγελίες</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Slide Menu -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <h2>Μενού</h2>
+            <button class="close-menu" id="closeMenu">&times;</button>
+        </div>
+        <div class="mobile-menu-content" id="mobileMenuContent">
+            <!-- Menu will be populated by JS -->
+        </div>
+    </div>
+
+    <main>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html">Αρχική</a> / <a href="cart.html">Καλάθι</a> / Ολοκλήρωση Αγοράς
+            </div>
+
+            <section class="checkout-section">
+                <h1>Ολοκλήρωση Αγοράς</h1>
+
+                <div class="checkout-container">
+                    <form id="checkoutForm" class="checkout-form">
+                        <fieldset>
+                            <legend>Στοιχεία Πελάτη</legend>
+                            <div class="form-group">
+                                <label for="customerName">Όνομα</label>
+                                <input type="text" id="customerName" name="customer_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerEmail">Email</label>
+                                <input type="email" id="customerEmail" name="customer_email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPhone">Τηλέφωνο</label>
+                                <input type="tel" id="customerPhone" name="customer_phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerAddress">Διεύθυνση</label>
+                                <textarea id="customerAddress" name="customer_address" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerCity">Πόλη</label>
+                                <input type="text" id="customerCity" name="customer_city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerState">Νομός</label>
+                                <input type="text" id="customerState" name="customer_state" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPostalCode">Τ.Κ</label>
+                                <input type="text" id="customerPostalCode" name="customer_postal_code" required>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Τρόπος Αποστολής</legend>
+                            <div id="shippingMethods"></div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Τρόπος Πληρωμής</legend>
+                            <div id="paymentMethods"></div>
+                        </fieldset>
+
+                        <div class="order-summary">
+                            <h2>Περίληψη Παραγγελίας</h2>
+                            <div id="orderItems"></div>
+                            <div class="summary-total">
+                                <span>Σύνολο:</span>
+                                <strong id="orderTotal">0,00</strong>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-large">Ολοκλήρωση Παραγγελίας</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content" id="footerContent">
+                <div class="footer-section">
+                    <h3>Πληροφορίες</h3>
+                    <p id="footerText"><!-- Φορτώνεται δυναμικά --></p>
+                </div>
+                <div class="footer-section">
+                    <h3>Επικοινωνία</h3>
+                    <p id="contactEmail"><!-- Φορτώνεται δυναμικά --></p>
+                    <p id="contactPhone"><!-- Φορτώνεται δυναμικά --></p>
+                </div>
+                <div id="socialNetworksSection" class="footer-section" style="display: none;">
+                    <h3>Σύνδεσμοι Κοινωνικών Δικτύων</h3>
+                    <ul id="socialNetworksList" style="list-style: none; padding: 0; margin: 0;">
+                        <!-- Φορτώνονται δυναμικά -->
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Σύνδεσμοι</h3>
+                    <ul>
+                        <li><a href="about.html">Σχετικά με εμάς</a></li>
+                        <li><a href="#">Πολιτική Απορρήτου</a></li>
+                        <li><a href="#">Όροι Χρήσης</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p id="copyrightText">2026 - Όλα τα δικαιώματα διατηρούνται</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="scroll-to-top-car" id="scrollToTopCar">
+        <svg width="800" height="800" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg" class="car-icon">
+            <path d="M13.84 6.852 12.6 5.7l-1.1-2.2a1.05 1.05 0 0 0-.9-.5H4.4a1.05 1.05 0 0 0-.9.5L2.4 5.7 1.16 6.852a.5.5 0 0 0-.16.367V11.5a.5.5 0 0 0 .5.5h2c.2 0 .5-.2.5-.4V11h7v.5c0 .2.2.5.4.5h2.1a.5.5 0 0 0 .5-.5V7.219a.5.5 0 0 0-.16-.367M4.5 4h6l1 2h-8ZM5 8.6c0 .2-.3.4-.5.4H2.4c-.2 0-.4-.3-.4-.5V7.4c.1-.3.3-.5.6-.4l2 .4c.2 0 .4.3.4.5Zm8-.1c0 .2-.2.5-.4.5h-2.1c-.2 0-.5-.2-.5-.4v-.7c0-.2.2-.5.4-.5l2-.4c.3-.1.5.1.6.4Z" fill="currentColor"/>
+        </svg>
+    </div>
+
+    <script src="../assets/js/cart-manager.js"></script>
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/products-menu.js"></script>
+    <script src="../assets/js/search-preview.js"></script>
+    <script src="../assets/js/breadcrumbs.js"></script>
+    <script src="../assets/js/checkout.js"></script>
+</body>
+</html>

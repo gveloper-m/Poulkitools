@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Poulki Shop</title>
+    <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="login-box">
+                <h1>Admin Panel</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Όνομα Χρήστη</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Κωδικός</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Σύνδεση</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="dashboardPage" class="page" style="display: none;">
+            <div class="admin-header">
+                <div class="header-brand">
+                    <h1>Poulki Shop Admin</h1>
+                </div>
+                <div class="header-actions">
+                    <span id="adminUsername"></span>
+                    <button class="btn btn-secondary" onclick="logout()">Αποσύνδεση</button>
+                </div>
+            </div>
+
+            <div class="admin-layout">
+                <!-- Sidebar -->
+                <aside class="admin-sidebar">
+                    <nav class="admin-menu">
+                        <a href="#" class="menu-item active" data-page="dashboard">Αρχική Σελίδα</a>
+                        <a href="#" class="menu-item" data-page="appearance">Εμφάνιση & Branding</a>
+                        <a href="#" class="menu-item" data-page="products">Προϊόντα (XML)</a>
+                        <a href="#" class="menu-item" data-page="orders">Παραγγελίες</a>
+                        <a href="#" class="menu-item" data-page="shipping">Τρόποι Αποστολής</a>
+                        <a href="#" class="menu-item" data-page="payment">Τρόποι Πληρωμής</a>
+                        <a href="#" class="menu-item" data-page="categories">Κατηγοριες</a>
+                        <a href="#" class="menu-item" data-page="translations">Μεταφράσεις</a>
+                        <a href="#" class="menu-item" data-page="settings">Ρυθμίσεις</a>
+                    </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="admin-content">
+                    <!-- Dashboard Page -->
+                    <div class="admin-page active" id="page-dashboard">
+                        <div class="page-header">
+                            <h2>Αρχική Σελίδα</h2>
+                        </div>
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <h3>Συνολικές Παραγγελίες</h3>
+                                <p class="stat-value" id="totalOrders">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Σύνολο Προϊόντων</h3>
+                                <p class="stat-value" id="totalProducts">0</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Τελευταία Εισαγωγή XML</h3>
+                                <p class="stat-value" id="lastImport">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance Page -->
+                    <div class="admin-page" id="page-appearance">
+                        <div class="page-header">
+                            <h2>Εμφάνιση & Branding</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <h3>Λογότυπο & Όνομα Ιστοσελίδας</h3>
+                                <div class="form-group">
+                                    <label for="siteName">Όνομα Ιστοσελίδας</label>
+                                    <input type="text" id="siteName" placeholder="π.χ. Poulki Shop">
+                                </div>
+                                <div class="form-group">
+                                    <label for="logoUpload">Ανέβασμα Λογοτύπου</label>
+                                    <input type="file" id="logoUpload" accept="image/*">
+                                    <small>Αφήστε κενό για να χρησιμοποιηθεί μόνο το όνομα</small>
+                                </div>
+                                <div id="logoPreview" style="margin: 15px 0;">
+                                    <p>Προεπισκόπηση:</p>
+                                    <div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-width: 300px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; min-height: 100px;">
+                                        <img id="logoPreviewImg" style="max-height: 80px; display: none; object-fit: contain; background: transparent;">
+                                        <span id="logoPreviewText" style="font-weight: bold; font-size: 18px;">Poulki Shop</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveLogoSettings()">Αποθήκευση</button>
+                                <button class="btn btn-secondary" onclick="removeLogo()" style="margin-left: 10px;">Αφαίρεση Λογοτύπου</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Search Image Banner</h3>
+                                <div class="form-group">
+                                    <label for="searchImageUpload">Ανέβασμα Εικόνας (Αναζήτηση)</label>
+                                    <input type="file" id="searchImageUpload" accept="image/*">
+                                    <small>Αυτή η εικόνα θα εμφανίζεται ως banner κάτω από τα κύρια banners με τη φόρμα αναζήτησης επάνω της</small>
+                                </div>
+                                <div id="searchImagePreview" style="margin: 15px 0;">
+                                    <p>Προεπισκόπηση:</p>
+                                    <div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-width: 100%; background: #f9f9f9; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                                        <img id="searchImagePreviewImg" style="max-height: 200px; max-width: 100%; display: none; object-fit: cover;">
+                                        <span id="searchImagePreviewText" style="color: #999;">Κάντε κλικ στο κουμπί ανέβασης για να επιλέξετε μια εικόνα</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" onclick="uploadSearchImage()">Ανέβασμα</button>
+                                <button class="btn btn-secondary" onclick="removeSearchImage()" style="margin-left: 10px;">Αφαίρεση Εικόνας</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Banners</h3>
+                                <div class="form-group">
+                                    <label for="bannerUpload">Ανέβασμα Banner</label>
+                                    <input type="file" id="bannerUpload" accept="image/*">
+                                    <input type="text" id="bannerTitle" placeholder="Τίτλος Banner">
+                                    <input type="text" id="bannerLink" placeholder="Σύνδεσμος (προαιρετικά)">
+                                    <input type="number" id="bannerPosition" placeholder="Θέση" value="0">
+                                    <button class="btn btn-primary" onclick="uploadBanner()">Ανέβασμα</button>
+                                </div>
+                                <div id="bannersList" class="list-items"></div>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Σελίδα Σχετικά με Εμάς</h3>
+                                <div class="form-group">
+                                    <label for="aboutUsText">Κείμενο About Us</label>
+                                    <textarea id="aboutUsText" rows="5"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mapsIframeUrl">Google Maps Iframe URL</label>
+                                    <textarea id="mapsIframeUrl" rows="3" placeholder="Αντιγράψτε το src του iframe"></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveAppearanceSettings()">Αποθήκευση</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Εμφάνιση Προϊόντων (Carousel Banner)</h3>
+                                <p>Επιλέξτε τα προϊόντα που θα εμφανίζονται στο carousel κάτω από το banner αναζήτησης (3 προϊόντα σε desktop, 1 σε mobile)</p>
+                                <div class="form-group">
+                                    <label for="featuredProductsSearch">Αναζήτηση Προϊόντων</label>
+                                    <input type="text" id="featuredProductsSearch" placeholder="Αναζητήστε προϊόν..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px;">
+                                </div>
+                                <div id="availableProductsList" style="border: 1px solid #ddd; border-radius: 4px; max-height: 400px; overflow-y: auto; background: #f9f9f9; padding: 10px; margin-bottom: 15px;"></div>
+                                <div class="form-group">
+                                    <h4>Επιλεγμένα Προϊόντα</h4>
+                                    <div id="selectedProductsList" style="border: 1px solid #ddd; border-radius: 4px; min-height: 100px; padding: 10px; background: #f9f9f9;"></div>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveFeaturedProducts()">Αποθήκευση Επιλεγμένων</button>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Products Page -->
+                    <div class="admin-page" id="page-products">
+                        <div class="page-header">
+                            <h2>Διαχείριση Προϊόντων</h2>
+                        </div>
+                        <div class="page-content">
+                            <!-- XML Import Section -->
+                            <section class="admin-section">
+                                <h3>Εισαγωγή XML</h3>
+                                <p>URL: https://www.americat.gr/allproducts.xml</p>
+                                <button class="btn btn-primary" onclick="importXML()">Εισαγωγή Τώρα</button>
+                                <div id="importStatus" style="display:none; margin-top: 10px;"></div>
+                            </section>
+
+                            <!-- Manual Product Upload Section -->
+                            <section class="admin-section">
+                                <h3>Ανέβασμα Προϊόντος</h3>
+                                <form id="productForm" enctype="multipart/form-data">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productName">Όνομα Προϊόντος *</label>
+                                            <input type="text" id="productName" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productPrice">Τιμή (με ΦΠΑ) *</label>
+                                            <input type="number" id="productPrice" name="price_with_vat" step="0.01" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productCategory">Κατηγορία</label>
+                                            <select id="productCategory" name="category"></select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productCatId">Κατηγορία ID</label>
+                                            <input type="number" id="productCatId" name="cat_id">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productModel">Μοντέλο</label>
+                                            <input type="text" id="productModel" name="model">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productManufacturer">Κατασκευαστής</label>
+                                            <input type="text" id="productManufacturer" name="manufacturer">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productWeight">Βάρος (kg)</label>
+                                            <input type="text" id="productWeight" name="weight">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productQuantity">Ποσότητα</label>
+                                            <input type="number" id="productQuantity" name="quantity" value="1">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productMPA">MPA</label>
+                                            <input type="text" id="productMPA" name="mpa">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productGAN">GAN</label>
+                                            <input type="text" id="productGAN" name="gan">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="productDescription">Περιγραφή</label>
+                                        <textarea id="productDescription" name="description" rows="4"></textarea>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productLink">Σύνδεσμος</label>
+                                            <input type="url" id="productLink" name="link">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productThursdayPrice">Τιμή Πέμπτης</label>
+                                            <input type="number" id="productThursdayPrice" name="thursday_price" step="0.01">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productInstock">Διαθεσιμότητα</label>
+                                            <select id="productInstock" name="instock">
+                                                <option value="Yes">Διαθέσιμο</option>
+                                                <option value="No">Μη διαθέσιμο</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productImage">Εικόνα Προϊόντος</label>
+                                            <input type="file" id="productImage" name="image" accept="image/*">
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">Ανέβασμα Προϊόντος</button>
+                                </form>
+                                <div id="productFormStatus" style="display:none; margin-top: 10px;"></div>
+                            </section>
+
+                            <!-- Products List Section -->
+                            <section class="admin-section">
+                                <h3>Προϊόντα</h3>
+                                <div id="productsList" class="list-items"></div>
+                                <div id="productsPagination" class="pagination"></div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Orders Page -->
+                    <div class="admin-page" id="page-orders">
+                        <div class="page-header">
+                            <h2>Παραγγελίες</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <h3>Φίλτρα</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="filterDateFrom">Από</label>
+                                        <input type="date" id="filterDateFrom">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="filterDateTo">Έως</label>
+                                        <input type="date" id="filterDateTo">
+                                    </div>
+                                    <button class="btn btn-primary" onclick="filterOrders()">Φίλτρο</button>
+                                    <button class="btn btn-secondary" onclick="exportOrdersToCSV()">Export CSV</button>
+                                </div>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Όλες οι Παραγγελίες</h3>
+                                <div id="ordersList" class="list-items"></div>
+                                <div class="pagination" id="ordersPagination"></div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Methods Page -->
+                    <div class="admin-page" id="page-shipping">
+                        <div class="page-header">
+                            <h2>Τρόποι Αποστολής</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <h3>Νέος Τρόπος Αποστολής</h3>
+                                <div class="form-group">
+                                    <label for="shippingName">Όνομα</label>
+                                    <input type="text" id="shippingName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="shippingDescription">Περιγραφή</label>
+                                    <textarea id="shippingDescription" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="shippingCost">Κόστος</label>
+                                    <input type="number" id="shippingCost" step="0.01" value="0">
+                                </div>
+                                <button class="btn btn-primary" onclick="createShippingMethod()">Δημιουργία</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Υπάρχοντες Τρόποι</h3>
+                                <div id="shippingList" class="list-items"></div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Page -->
+                    <div class="admin-page" id="page-payment">
+                        <div class="page-header">
+                            <h2>Τρόποι Πληρωμής</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <h3>Νέος Τρόπος Πληρωμής</h3>
+                                <div class="form-group">
+                                    <label for="paymentName">Όνομα</label>
+                                    <input type="text" id="paymentName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="paymentDescription">Περιγραφή</label>
+                                    <textarea id="paymentDescription" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="paymentCost">Κόστος</label>
+                                    <input type="number" id="paymentCost" step="0.01" value="0">
+                                </div>
+                                <button class="btn btn-primary" onclick="createPaymentMethod()">Δημιουργία</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Υπάρχοντες Τρόποι</h3>
+                                <div id="paymentList" class="list-items"></div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Translations Page -->
+                    <div class="admin-page" id="page-translations">
+                        <div class="page-header">
+                            <h2>Διαχείριση Μεταφράσεων</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <div class="section-header">
+                                    <h3>Μεταφράσεις Ελληνικά → Αγγλικά</h3>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button class="btn btn-secondary" onclick="scanSiteTexts()">Σάρωση Ιστοσελίδας</button>
+                                        <button class="btn btn-info" onclick="exportUntranslatedJSON()">💾 Λήψη Κενών (JSON)</button>
+                                        <button class="btn btn-info" onclick="exportAllTranslationsJSON()">💾 Λήψη Όλων (JSON)</button>
+                                        <label class="btn btn-success" style="margin: 0; cursor: pointer;">
+                                            📤 Ανέβασμα JSON
+                                            <input type="file" accept=".json" onchange="handleImportTranslationsFile(event)" style="display: none;">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="translationsContainer" class="translations-container">
+                                    <p class="loading">Φόρτωση μεταφράσεων...</p>
+                                </div>
+                                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                                    <button class="btn btn-primary" onclick="saveAllTranslations()">Αποθήκευση όλων των Μεταφράσεων</button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Categories Page -->
+                    <div class="admin-page" id="page-categories">
+                        <div class="page-header">
+                            <h2>Διαχείριση Κατηγοριών</h2>
+                        </div>
+                        <div class="page-content">
+                            <!-- Create New Category Section -->
+                            <section class="admin-section">
+                                <h3>Δημιουργία Νέας Κατηγορίας</h3>
+                                <form id="categoryForm">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="categoryName">Όνομα Κατηγορίας *</label>
+                                            <input type="text" id="categoryName" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="categorySlug">Slug (αυτόματα)</label>
+                                            <input type="text" id="categorySlug" name="slug" readonly>
+                                            <small>Δημιουργείται αυτόματα από το όνομα</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="categoryParent">Γονική Κατηγορία (Προαιρετικό)</label>
+                                        <select id="categoryParent" name="parent_id">
+                                            <option value="">-- Καμία (Κύρια Κατηγορία) --</option>
+                                        </select>
+                                        <small>Επιλέξτε μια προσαρμοσμένη κατηγορία ως γονική. Αν δεν επιλέξετε κάτι, η κατηγορία θα εμφανιστεί στο κύριο επίπεδο.</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="categoryDescription">Περιγραφή</label>
+                                        <textarea id="categoryDescription" name="description" rows="3"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">Δημιουργία Κατηγορίας</button>
+                                </form>
+                                <div id="categoryFormStatus" style="display:none; margin-top: 10px;"></div>
+                            </section>
+
+                            <!-- Existing Categories Section -->
+                            <section class="admin-section">
+                                <h3>Υπάρχουσες Κατηγορίες</h3>
+                                <div id="customCategoriesList" class="list-items"></div>
+                            </section>
+
+                            <!-- Category Visibility Section -->
+                            <section class="admin-section">
+                                <h3>Ορατές Κατηγορίες Προϊόντων</h3>
+                                <p style="color: #666; margin-bottom: 20px;">Ξεσημειώστε τις κατηγορίες που δεν θέλετε να εμφανίζονται στο μενού και τα προϊόντα</p>
+                                <div id="categoriesList" class="categories-list"></div>
+                                <div style="margin-top: 20px;">
+                                    <button class="btn btn-primary" onclick="saveCategoryVisibility()">Αποθήκευση</button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Translations Page -->
+                    <div class="admin-page" id="page-translations">
+                        <div class="page-header">
+                            <h2>Διαχείριση Μεταφράσεων</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <div class="section-header">
+                                    <h3>Μεταφράσεις Ελληνικά → Αγγλικά</h3>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button class="btn btn-secondary" onclick="scanSiteTexts()">Σάρωση Ιστοσελίδας</button>
+                                        <button class="btn btn-info" onclick="exportUntranslatedJSON()">💾 Λήψη Κενών (JSON)</button>
+                                        <button class="btn btn-info" onclick="exportAllTranslationsJSON()">💾 Λήψη Όλων (JSON)</button>
+                                        <label class="btn btn-success" style="margin: 0; cursor: pointer;">
+                                            📤 Ανέβασμα JSON
+                                            <input type="file" accept=".json" onchange="handleImportTranslationsFile(event)" style="display: none;">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="translationsContainer" class="translations-container">
+                                    <p class="loading">Φόρτωση μεταφράσεων...</p>
+                                </div>
+                                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                                    <button class="btn btn-primary" onclick="saveAllTranslations()">Αποθήκευση όλων των Μεταφράσεων</button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- Settings Page -->
+                    <div class="admin-page" id="page-settings">
+                        <div class="page-header">
+                            <h2>Ρυθμίσεις</h2>
+                        </div>
+                        <div class="page-content">
+                            <section class="admin-section">
+                                <h3>Γενικές Ρυθμίσεις</h3>
+                                <div class="form-group">
+                                    <label for="siteName">Όνομα Ιστοτόπου</label>
+                                    <input type="text" id="siteName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactEmail">Email Επικοινωνίας</label>
+                                    <input type="email" id="contactEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactPhone">Τηλέφωνο</label>
+                                    <input type="tel" id="contactPhone">
+                                </div>
+                                <div class="form-group">
+                                    <label for="footerText">Κείμενο Footer</label>
+                                    <textarea id="footerText" rows="3"></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveGeneralSettings()">Αποθήκευση</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Κοινωνικά Δίκτυα</h3>
+                                <div class="form-group">
+                                    <label for="socialFacebook">Facebook URL</label>
+                                    <input type="url" id="socialFacebook">
+                                </div>
+                                <div class="form-group">
+                                    <label for="socialInstagram">Instagram URL</label>
+                                    <input type="url" id="socialInstagram">
+                                </div>
+                                <div class="form-group">
+                                    <label for="socialTwitter">Twitter URL</label>
+                                    <input type="url" id="socialTwitter">
+                                </div>
+                                <div class="form-group">
+                                    <label for="socialYoutube">YouTube URL</label>
+                                    <input type="url" id="socialYoutube">
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSocialSettings()">Αποθήκευση</button>
+                            </section>
+
+                            <section class="admin-section">
+                                <h3>Διαχείριση Λογαριασμού</h3>
+                                <div class="form-group">
+                                    <label for="newUsername">Νέο Όνομα Χρήστη</label>
+                                    <input type="text" id="newUsername">
+                                    <button class="btn btn-primary" onclick="changeUsername()">Ενημέρωση</button>
+                                </div>
+                                <div class="form-group">
+                                    <label for="currentPassword">Τρέχων Κωδικός</label>
+                                    <input type="password" id="currentPassword">
+                                </div>
+                                <div class="form-group">
+                                    <label for="newPassword">Νέος Κωδικός</label>
+                                    <input type="password" id="newPassword">
+                                </div>
+                                <button class="btn btn-primary" onclick="changePassword()">Αλλαγή Κωδικού</button>
+                            </section>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="orderModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeOrderModal()">&times;</span>
+            <h2>Λεπτομέρειες Παραγγελίας</h2>
+            <div id="orderModalContent"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="../../assets/js/admin.js"></script>
+</body>
+</html>
