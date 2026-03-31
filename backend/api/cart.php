@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $price = $product['thursday_price'] > 0 ? $product['thursday_price'] : $product['price_with_vat'];
-        $price = applyXMLMarkup($price);
+        $isXML = (isset($product['source']) && $product['source'] === 'xml') || !isset($product['source']);
+        $price = applyXMLMarkup($price, $isXML);
         
         if (isset($_SESSION['cart'][$productId])) {
             $_SESSION['cart'][$productId]['quantity'] += $quantity;

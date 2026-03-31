@@ -30,11 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'import_xml') 
         $pdo->query('SET unique_checks = 0');
         $pdo->query('SET autocommit = 0');
         
-        // Clear featured products first (to avoid foreign key constraint)
-        $pdo->query('DELETE FROM featured_products');
-        
-        // Then clear existing products
-        $pdo->query('DELETE FROM products');
+        // Don't delete products - we'll update existing ones and add new ones
         
         $pdo->commit();
         
@@ -93,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'import_xml') 
             }
 
             // Add to batch
-            $valueStrings[] = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            $valueStrings[] = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
             $params[] = $uniqueId;
             $params[] = $name;
             $params[] = $description;
@@ -112,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'import_xml') 
             $params[] = $availability;
             $params[] = $quantity;
             $params[] = $extraImages;
+            $params[] = 'xml';
             
             $importedCount++;
             
@@ -121,8 +118,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'import_xml') 
                     unique_id, name, description, model, link, image, 
                     category, cat_id, price_with_vat, thursday_price, 
                     manufacturer, mpa, gan, weight, instock, availability, 
-                    quantity, extra_images
-                ) VALUES ' . implode(',', $valueStrings);
+                    quantity, extra_images, source
+                ) VALUES ' . implode(',', $valueStrings) . '
+                ON DUPLICATE KEY UPDATE
+                    name = VALUES(name),
+                    description = VALUES(description),
+                    model = VALUES(model),
+                    link = VALUES(link),
+                    image = VALUES(image),
+                    category = VALUES(category),
+                    cat_id = VALUES(cat_id),
+                    price_with_vat = VALUES(price_with_vat),
+                    thursday_price = VALUES(thursday_price),
+                    manufacturer = VALUES(manufacturer),
+                    mpa = VALUES(mpa),
+                    gan = VALUES(gan),
+                    weight = VALUES(weight),
+                    instock = VALUES(instock),
+                    availability = VALUES(availability),
+                    quantity = VALUES(quantity),
+                    extra_images = VALUES(extra_images)';
                 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
@@ -152,8 +167,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'import_xml') 
                 unique_id, name, description, model, link, image, 
                 category, cat_id, price_with_vat, thursday_price, 
                 manufacturer, mpa, gan, weight, instock, availability, 
-                quantity, extra_images
-            ) VALUES ' . implode(',', $valueStrings);
+                quantity, extra_images, source
+            ) VALUES ' . implode(',', $valueStrings) . '
+            ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                description = VALUES(description),
+                model = VALUES(model),
+                link = VALUES(link),
+                image = VALUES(image),
+                category = VALUES(category),
+                cat_id = VALUES(cat_id),
+                price_with_vat = VALUES(price_with_vat),
+                thursday_price = VALUES(thursday_price),
+                manufacturer = VALUES(manufacturer),
+                mpa = VALUES(mpa),
+                gan = VALUES(gan),
+                weight = VALUES(weight),
+                instock = VALUES(instock),
+                availability = VALUES(availability),
+                quantity = VALUES(quantity),
+                extra_images = VALUES(extra_images)';
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -187,6 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $limit = (int)($_GET['limit'] ?? 20);
         $search = trim($_GET['search'] ?? '');
         $category = trim($_GET['category'] ?? '');
+        $random = isset($_GET['random']) && $_GET['random'] === '1';
         
         // Validate limit
         $limit = min(max($limit, 1), 100);
@@ -240,9 +274,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 $catRow = $catStmt->fetch();
                 
                 if ($catRow) {
-                    // Search for products in the category path that match this custom category name
-                    $query .= ' AND p.category LIKE ?';
-                    $params[] = '%' . $catRow['name'] . '%';
+                    // Match the category name exactly for custom categories
+                    $query .= ' AND TRIM(p.category) = ?';
+                    $params[] = $catRow['name'];
                 } else {
                     // Category not found, return empty results
                     $query .= ' AND 1=0';
@@ -252,6 +286,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 $query .= ' AND p.cat_id = ?';
                 $params[] = $category;
             }
+        }
+        
+        // Add randomization if requested
+        if ($random) {
+            $query .= ' ORDER BY RAND()';
         }
         
         $query .= ' LIMIT ? OFFSET ?';
@@ -288,9 +327,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 $catRow = $catStmt->fetch();
                 
                 if ($catRow) {
-                    // Search for products in the category path that match this custom category name
-                    $countQuery .= ' AND p.category LIKE ?';
-                    $countParams[] = '%' . $catRow['name'] . '%';
+                    // Match the category name exactly for custom categories
+                    $countQuery .= ' AND TRIM(p.category) = ?';
+                    $countParams[] = $catRow['name'];
                 } else {
                     // Category not found, return empty results
                     $countQuery .= ' AND 1=0';
@@ -306,13 +345,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $countStmt->execute($countParams);
         $total = $countStmt->fetch()['total'];
         
-        // Apply 5 EUR markup to all products
+        // Apply 5 EUR markup only to XML-imported products
         foreach ($products as &$product) {
+            $isXML = (isset($product['source']) && $product['source'] === 'xml') || !isset($product['source']);
             if (!empty($product['price_with_vat']) && floatval($product['price_with_vat']) > 0) {
-                $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat']);
+                $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat'], $isXML);
             }
             if (!empty($product['thursday_price']) && floatval($product['thursday_price']) > 0) {
-                $product['thursday_price'] = applyXMLMarkup($product['thursday_price']);
+                $product['thursday_price'] = applyXMLMarkup($product['thursday_price'], $isXML);
             }
         }
         
@@ -350,12 +390,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         exit;
     }
     
-    // Apply 5 EUR markup to prices
+    // Apply 5 EUR markup only to XML-imported products
+    $isXML = (isset($product['source']) && $product['source'] === 'xml') || !isset($product['source']);
     if (!empty($product['price_with_vat']) && floatval($product['price_with_vat']) > 0) {
-        $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat']);
+        $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat'], $isXML);
     }
     if (!empty($product['thursday_price']) && floatval($product['thursday_price']) > 0) {
-        $product['thursday_price'] = applyXMLMarkup($product['thursday_price']);
+        $product['thursday_price'] = applyXMLMarkup($product['thursday_price'], $isXML);
     }
     
     // Decode extra images
@@ -451,6 +492,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 }
             }
             
+            // Add custom categories under "Προϊόντα"
+            $path = 'Προϊόντα » ' . $path;
+            
             $allCategories[] = [
                 'cat_id' => 'custom_' . $cat['id'],
                 'category' => $path,
@@ -458,6 +502,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 'id' => $cat['id']
             ];
         }
+        
+        // Deduplicate categories with same base name (last part of path)
+        // Keep the "Προϊόντα" version and remove duplicates
+        $deduplicatedCategories = [];
+        $seenBaseNames = [];
+        
+        // First pass: collect all custom categories (Προϊόντα entries)
+        foreach ($allCategories as $cat) {
+            if ($cat['type'] === 'custom') {
+                // Extract base name (last part after » separator)
+                $parts = preg_split('/\s*»\s*/', $cat['category']);
+                $baseName = trim(end($parts));
+                $seenBaseNames[$baseName] = true;
+                $deduplicatedCategories[] = $cat;
+            }
+        }
+        
+        // Second pass: add imported categories only if their base name hasn't been seen
+        foreach ($allCategories as $cat) {
+            if ($cat['type'] === 'imported') {
+                $baseName = $cat['category'];
+                if (!isset($seenBaseNames[$baseName])) {
+                    $deduplicatedCategories[] = $cat;
+                    $seenBaseNames[$baseName] = true;
+                }
+            }
+        }
+        
+        $allCategories = $deduplicatedCategories;
         
         // Sort by category name
         usort($allCategories, function($a, $b) {
@@ -497,13 +570,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
             $stmt->execute($params);
             $products = $stmt->fetchAll();
             
-            // Apply 5 EUR markup to all recommended products
+            // Apply 5 EUR markup only to XML-imported products
             foreach ($products as &$product) {
+                $isXML = (isset($product['source']) && $product['source'] === 'xml') || !isset($product['source']);
                 if (!empty($product['price_with_vat']) && floatval($product['price_with_vat']) > 0) {
-                    $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat']);
+                    $product['price_with_vat'] = applyXMLMarkup($product['price_with_vat'], $isXML);
                 }
                 if (!empty($product['thursday_price']) && floatval($product['thursday_price']) > 0) {
-                    $product['thursday_price'] = applyXMLMarkup($product['thursday_price']);
+                    $product['thursday_price'] = applyXMLMarkup($product['thursday_price'], $isXML);
                 }
             }
             

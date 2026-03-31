@@ -56,7 +56,7 @@ async function loadCategoryProducts(page = 1) {
 
         // Display products with current sort preserved
         displayProducts();
-        createCategoryPagination(Math.ceil(filteredProducts.length / 20), page);
+        createCategoryPagination(Number.parseInt(data.pages, 10) || 0, page);
     } catch (error) {
         console.error('Error loading category products:', error);
     }
@@ -88,7 +88,11 @@ function displayProducts() {
 
 function createCategoryPagination(pages, currentPage) {
     const paginationContainer = document.getElementById('pagination');
-    if (!paginationContainer || pages <= 1) return;
+    if (!paginationContainer) return;
+    if (pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
 
     let html = '';
 

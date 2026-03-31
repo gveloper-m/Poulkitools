@@ -85,6 +85,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
+            // Check if this payment method is used in any orders
+            $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM orders WHERE payment_method_id = ?');
+            $checkStmt->execute([$id]);
+            $orderCount = $checkStmt->fetchColumn();
+
+            if ($orderCount > 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'error' => 'Δεν μπορείτε να διαγράψετε αυτόν τον τρόπο πληρωμής. Υπάρχουν ' . $orderCount . ' παραγγελίες που τον χρησιμοποιούν.'
+                ]);
+                exit;
+            }
+
             $stmt = $pdo->prepare('DELETE FROM payment_methods WHERE id = ?');
             $stmt->execute([$id]);
 

@@ -38,8 +38,12 @@ function getSettings() {
 }
 
 // Helper function to add XML import markup (5 EUR)
-function applyXMLMarkup($price) {
-    return floatval($price) + 5.00;
+function applyXMLMarkup($price, $isXML = true) {
+    // Only add 5 EUR markup to XML-imported products
+    if ($isXML) {
+        return floatval($price) + 5.00;
+    }
+    return floatval($price);
 }
 
 // Helper function to check admin login

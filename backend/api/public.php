@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_settings') {
         try {
             $settings = getSettings();
+            $settings['social_instagram'] = 'https://www.instagram.com/poulki_tools/';
+            $settings['social_facebook'] = 'https://www.facebook.com/people/Poulki-Tools/100092409976755/?locale=is_IS#';
+            $settings['social_twitter'] = 'https://www.tiktok.com/@poulki_tools';
             echo json_encode($settings ?: []);
         } catch (Exception $e) {
             http_response_code(500);

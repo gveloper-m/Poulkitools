@@ -43,12 +43,15 @@ async function loadShippingMethods() {
         const shippingContainer = document.getElementById('shippingMethods');
         if (shippingContainer && methods.length > 0) {
             shippingContainer.innerHTML = methods.map((method, index) => `
-                <div class="radio-item">
+                <div class="radio-item shipping-item">
                     <input type="radio" id="shipping_${method.id}" name="shipping_method_id" value="${method.id}" 
                         data-cost="${method.cost || 0}"
                         ${index === 0 ? 'checked' : ''} required onchange="updateOrderTotal()">
                     <label for="shipping_${method.id}">
-                        ${method.name} - ${formatPrice(method.cost)}
+                        <div class="method-header">
+                            ${method.name} - ${formatPrice(method.cost)}
+                        </div>
+                        ${method.description ? `<div class="method-description">${method.description}</div>` : ''}
                     </label>
                 </div>
             `).join('');
@@ -86,12 +89,15 @@ async function loadPaymentMethods() {
         const paymentContainer = document.getElementById('paymentMethods');
         if (paymentContainer && methods.length > 0) {
             paymentContainer.innerHTML = methods.map((method, index) => `
-                <div class="radio-item">
+                <div class="radio-item payment-item">
                     <input type="radio" id="payment_${method.id}" name="payment_method_id" value="${method.id}" 
                         data-cost="${method.cost || 0}"
                         ${index === 0 ? 'checked' : ''} required onchange="updateOrderTotal()">
                     <label for="payment_${method.id}">
-                        ${method.name}${method.cost > 0 ? ` - ${formatPrice(method.cost)}` : ''}
+                        <div class="method-header">
+                            ${method.name}${method.cost > 0 ? ` - ${formatPrice(method.cost)}` : ''}
+                        </div>
+                        ${method.description ? `<div class="method-description">${method.description}</div>` : ''}
                     </label>
                 </div>
             `).join('');

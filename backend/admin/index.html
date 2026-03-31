@@ -269,7 +269,10 @@
                                         </div>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary">Ανέβασμα Προϊόντος</button>
+                                    <div style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn btn-primary">Ανέβασμα Προϊόντος</button>
+                                        <button type="button" class="btn btn-secondary" id="cancelEditBtn" onclick="cancelProductEdit()" style="display: none;">Ακύρωση</button>
+                                    </div>
                                 </form>
                                 <div id="productFormStatus" style="display:none; margin-top: 10px;"></div>
                             </section>

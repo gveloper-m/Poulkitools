@@ -1265,13 +1265,35 @@ textarea {
 
 .radio-item, .checkbox-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
 }
 
 input[type="radio"],
 input[type="checkbox"] {
     cursor: pointer;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.radio-item label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.method-header {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.method-description {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+    margin-top: 3px;
 }
 
 .order-summary {

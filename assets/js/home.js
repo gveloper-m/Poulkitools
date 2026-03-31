@@ -93,7 +93,7 @@ async function loadBanners() {
 
 async function loadProducts(page = 1) {
     try {
-        const response = await fetch(`${API_BASE}/products.php?action=get_products&page=${page}&limit=20`);
+        const response = await fetch(`${API_BASE}/products.php?action=get_products&page=${page}&limit=20&random=1`);
         
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);

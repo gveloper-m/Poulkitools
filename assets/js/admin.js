@@ -642,7 +642,7 @@ async function importXML() {
 
 async function loadProducts(page = 1) {
     try {
-        const response = await fetch(`${getApiUrl('/products.php?action=get_products&page=${page}&limit=20')}`);
+        const response = await fetch(getApiUrl(`/products.php?action=get_products&page=${page}&limit=20`));
         const data = await response.json();
 
         const list = document.getElementById('productsList');
@@ -651,6 +651,10 @@ async function loadProducts(page = 1) {
                 <div class="list-item-content">
                     <div class="list-item-title">${product.name}</div>
                     <div class="list-item-subtitle">ID: ${product.unique_id} | Κατηγορία: ${product.category} | Τιμή: ${product.price_with_vat}€</div>
+                </div>
+                <div class="list-item-actions">
+                    <button class="btn btn-primary" onclick="editProduct(${product.id})">✏️ Επεξεργασία</button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${product.id})">🗑️ Διαγραφή</button>
                 </div>
             </div>
         `).join('');
@@ -671,22 +675,132 @@ function createProductsPagination(pages, currentPage) {
     let html = '';
 
     if (currentPage > 1) {
-        html += `<a href="#" onclick="event.preventDefault(); loadProducts(${currentPage - 1})">Προηγούμενη</a>`;
+        html += `<a href="#" onclick="loadProducts(${currentPage - 1}); return false;">Προηγούμενη</a>`;
     }
 
     for (let i = Math.max(1, currentPage - 2); i <= Math.min(pages, currentPage + 2); i++) {
         if (i === currentPage) {
             html += `<span class="active">${i}</span>`;
         } else {
-            html += `<a href="#" onclick="event.preventDefault(); loadProducts(${i})">${i}</a>`;
+            html += `<a href="#" onclick="loadProducts(${i}); return false;">${i}</a>`;
         }
     }
 
     if (currentPage < pages) {
-        html += `<a href="#" onclick="event.preventDefault(); loadProducts(${currentPage + 1})">Επόμενη</a>`;
+        html += `<a href="#" onclick="loadProducts(${currentPage + 1}); return false;">Επόμενη</a>`;
     }
 
     paginationContainer.innerHTML = html;
+}
+
+async function editProduct(productId) {
+    try {
+        const response = await fetch(getAdminApiUrl('/products-crud.php?id=' + productId));
+        const result = await response.json();
+
+        if (!result.success || !result.data) {
+            alert('Σφάλμα: Δεν βρέθηκε το προϊόν');
+            return;
+        }
+
+        const product = result.data;
+
+        // Populate form fields with product data
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productPrice').value = product.price_with_vat || '';
+        document.getElementById('productCategory').value = product.cat_id ? 'custom_' + product.cat_id : '';
+        document.getElementById('productCatId').value = product.cat_id || '';
+        document.getElementById('productModel').value = product.model || '';
+        document.getElementById('productManufacturer').value = product.manufacturer || '';
+        document.getElementById('productWeight').value = product.weight || '';
+        document.getElementById('productQuantity').value = product.quantity || 1;
+        document.getElementById('productMPA').value = product.mpa || '';
+        document.getElementById('productGAN').value = product.gan || '';
+        document.getElementById('productDescription').value = product.description || '';
+        document.getElementById('productLink').value = product.link || '';
+        document.getElementById('productThursdayPrice').value = product.thursday_price || '';
+        document.getElementById('productInstock').value = product.instock || 'Yes';
+
+        // Store the product ID for update
+        document.getElementById('productForm').dataset.editingId = productId;
+
+        // Change button text to indicate edit mode
+        const submitBtn = document.querySelector('#productForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = 'Ενημέρωση Προϊόντος';
+        }
+
+        // Show cancel button
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) {
+            cancelBtn.style.display = 'inline-block';
+        }
+
+        // Scroll to form
+        document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+
+        // Highlight the section to draw attention
+        const section = document.querySelector('.admin-section:has(#productForm)');
+        if (section) {
+            section.style.backgroundColor = '#fffacd';
+            setTimeout(() => {
+                section.style.backgroundColor = '';
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('Error loading product:', error);
+        alert('Σφάλμα: ' + error.message);
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('Είστε σίγουρος ότι θέλετε να διαγράψετε αυτό το προϊόν;')) {
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        formData.append('id', productId);
+
+        const response = await fetch(getAdminApiUrl('/products-crud.php'), {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Προϊόν διαγράφηκε με επιτυχία');
+            loadProducts();
+        } else {
+            alert('Σφάλμα: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Σφάλμα: ' + error.message);
+    }
+}
+
+function cancelProductEdit() {
+    const form = document.getElementById('productForm');
+    form.reset();
+    form.dataset.editingId = '';
+    
+    const submitBtn = document.querySelector('#productForm button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Ανέβασμα Προϊόντος';
+    }
+    
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) {
+        cancelBtn.style.display = 'none';
+    }
+    
+    const statusDiv = document.getElementById('productFormStatus');
+    if (statusDiv) {
+        statusDiv.style.display = 'none';
+    }
 }
 
 async function loadOrders(page = 1, dateFrom = null, dateTo = null) {
@@ -1157,9 +1271,13 @@ async function deletePaymentMethod(id) {
 
             if (data.success) {
                 loadPaymentMethods();
+                alert('Ο τρόπος πληρωμής διαγράφηκε με επιτυχία.');
+            } else if (data.error) {
+                alert('Σφάλμα: ' + data.error);
             }
         } catch (error) {
             console.error('Error deleting payment method:', error);
+            alert('Σφάλμα κατά τη διαγραφή του τρόπου πληρωμής.');
         }
     }
 }
@@ -1952,10 +2070,21 @@ async function handleProductFormSubmit(event) {
     
     const statusDiv = document.getElementById('productFormStatus');
     statusDiv.style.display = 'block';
-    statusDiv.innerHTML = '<p style="color: #2196F3;">Ανέβασμα...</p>';
+    
+    const form = event.target;
+    const editingId = form.dataset.editingId;
+    const isUpdate = editingId ? true : false;
+    
+    statusDiv.innerHTML = '<p style="color: #2196F3;">' + (isUpdate ? 'Ενημέρωση...' : 'Ανέβασμα...') + '</p>';
     
     try {
         const formData = new FormData(event.target);
+        
+        // If editing, add the update method and ID
+        if (isUpdate) {
+            formData.append('_method', 'PUT');
+            formData.append('id', editingId);
+        }
         
         // Add category info from selected option
         const categorySelect = document.getElementById('productCategory');
@@ -1991,9 +2120,25 @@ async function handleProductFormSubmit(event) {
         const result = await response.json();
         
         if (result.success) {
-            statusDiv.innerHTML = '<p style="color: #4CAF50;">' + result.message + '</p>';
+            const message = isUpdate ? 'Προϊόν ενημερώθηκε με επιτυχία!' : 'Προϊόν δημιουργήθηκε με επιτυχία!';
+            statusDiv.innerHTML = '<p style="color: #4CAF50;">' + message + '</p>';
             event.target.reset();
+            
+            // Clear editing mode
+            form.dataset.editingId = '';
+            const submitBtn = document.querySelector('#productForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Ανέβασμα Προϊόντος';
+            }
+            
+            // Hide cancel button
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
+            }
+            
             loadProductCategories();
+            loadProducts();
             
             setTimeout(() => {
                 statusDiv.style.display = 'none';
