@@ -159,6 +159,7 @@ function showPage(pageName) {
         } else if (pageName === 'products') {
             loadProductCategories();
             initProductForm();
+            initializeProductsSearch();
             loadProducts();
         } else if (pageName === 'orders') {
             loadOrders();
@@ -640,13 +641,19 @@ async function importXML() {
     }
 }
 
+let productsSearchTerm = '';
+
 async function loadProducts(page = 1) {
     try {
-        const response = await fetch(getApiUrl(`/products.php?action=get_products&page=${page}&limit=20`));
+        const searchQuery = productsSearchTerm ? `&search=${encodeURIComponent(productsSearchTerm)}` : '';
+        const response = await fetch(getApiUrl(`/products.php?action=get_products&page=${page}&limit=20${searchQuery}`));
         const data = await response.json();
 
         const list = document.getElementById('productsList');
-        list.innerHTML = data.products.map(product => `
+        if (!data.products || data.products.length === 0) {
+            list.innerHTML = '<div class="list-item"><div class="list-item-content"><div class="list-item-title">Δεν βρέθηκαν προϊόντα</div></div></div>';
+        } else {
+            list.innerHTML = data.products.map(product => `
             <div class="list-item">
                 <div class="list-item-content">
                     <div class="list-item-title">${product.name}</div>
@@ -658,6 +665,7 @@ async function loadProducts(page = 1) {
                 </div>
             </div>
         `).join('');
+        }
 
         document.getElementById('totalProducts').textContent = data.total;
         
@@ -670,7 +678,11 @@ async function loadProducts(page = 1) {
 
 function createProductsPagination(pages, currentPage) {
     const paginationContainer = document.getElementById('productsPagination');
-    if (!paginationContainer || pages <= 1) return;
+    if (!paginationContainer) return;
+    if (pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
 
     let html = '';
 
@@ -691,6 +703,20 @@ function createProductsPagination(pages, currentPage) {
     }
 
     paginationContainer.innerHTML = html;
+}
+
+function initializeProductsSearch() {
+    const searchInput = document.getElementById('productsSearchInput');
+    if (!searchInput || searchInput.dataset.initialized === 'true') {
+        return;
+    }
+
+    searchInput.addEventListener('input', (event) => {
+        productsSearchTerm = event.target.value.trim();
+        loadProducts(1);
+    });
+
+    searchInput.dataset.initialized = 'true';
 }
 
 async function editProduct(productId) {
@@ -720,6 +746,11 @@ async function editProduct(productId) {
         document.getElementById('productLink').value = product.link || '';
         document.getElementById('productThursdayPrice').value = product.thursday_price || '';
         document.getElementById('productInstock').value = product.instock || 'Yes';
+        document.getElementById('productImage').value = '';
+        document.getElementById('productExtraImage1').value = '';
+        document.getElementById('productExtraImage2').value = '';
+        resetProductImageRemovalControls();
+        updateProductImageLabels(product);
 
         // Store the product ID for update
         document.getElementById('productForm').dataset.editingId = productId;
@@ -786,6 +817,8 @@ function cancelProductEdit() {
     const form = document.getElementById('productForm');
     form.reset();
     form.dataset.editingId = '';
+    resetProductImageRemovalControls();
+    updateProductImageLabels();
     
     const submitBtn = document.querySelector('#productForm button[type="submit"]');
     if (submitBtn) {
@@ -801,6 +834,42 @@ function cancelProductEdit() {
     if (statusDiv) {
         statusDiv.style.display = 'none';
     }
+}
+
+function resetProductImageRemovalControls() {
+    ['removeProductImage', 'removeProductExtraImage1', 'removeProductExtraImage2'].forEach((id) => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.checked = false;
+        }
+    });
+}
+
+function updateProductImageLabels(product = null) {
+    const extraImages = product && Array.isArray(product.extra_images) ? product.extra_images : [];
+    const labels = [
+        {
+            id: 'productImageCurrent',
+            value: product ? product.image : '',
+            empty: 'Τρέχουσα κύρια εικόνα: καμία'
+        },
+        {
+            id: 'productExtraImage1Current',
+            value: extraImages[0],
+            empty: 'Τρέχουσα 2η εικόνα: καμία'
+        },
+        {
+            id: 'productExtraImage2Current',
+            value: extraImages[1],
+            empty: 'Τρέχουσα 3η εικόνα: καμία'
+        }
+    ];
+
+    labels.forEach(({ id, value, empty }) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.textContent = value ? `Τρέχουσα εικόνα: ${value}` : empty;
+    });
 }
 
 async function loadOrders(page = 1, dateFrom = null, dateTo = null) {
@@ -2123,6 +2192,8 @@ async function handleProductFormSubmit(event) {
             const message = isUpdate ? 'Προϊόν ενημερώθηκε με επιτυχία!' : 'Προϊόν δημιουργήθηκε με επιτυχία!';
             statusDiv.innerHTML = '<p style="color: #4CAF50;">' + message + '</p>';
             event.target.reset();
+            resetProductImageRemovalControls();
+            updateProductImageLabels();
             
             // Clear editing mode
             form.dataset.editingId = '';

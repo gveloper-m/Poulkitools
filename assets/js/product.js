@@ -1,6 +1,8 @@
 // Product detail page functionality
 
 let currentProductId = null;
+let productGalleryImages = [];
+let currentGalleryIndex = 0;
 
 document.addEventListener('DOMContentLoaded', async function() {
     const params = new URLSearchParams(window.location.search);
@@ -25,26 +27,46 @@ async function loadProduct(id) {
         const price = product.thursday_price > 0 ? product.thursday_price : product.price_with_vat;
         const oldPrice = product.thursday_price > 0 ? product.price_with_vat : null;
         const inStock = product.instock === 'Y' || product.instock === 'Yes';
+        productGalleryImages = [
+            product.image,
+            ...(Array.isArray(product.extra_images) ? product.extra_images : [])
+        ].filter(Boolean).map(fixImagePath);
+        currentGalleryIndex = 0;
 
-        // Set up breadcrumbs using BreadcrumbManager
         BreadcrumbManager.setBreadcrumb(BreadcrumbManager.createFromProduct(product));
 
-        let extraImagesHtml = '';
-        if (product.extra_images && product.extra_images.length > 0) {
-            extraImagesHtml = `
-                <div class="product-thumbnail-gallery">
-                    <img src="${fixImagePath(product.image)}" alt="Main" class="product-thumbnail active" onclick="changeMainImage(this.src)">
-                    ${product.extra_images.map(img =>
-                        `<img src="${fixImagePath(img)}" alt="Extra" class="product-thumbnail" onclick="changeMainImage(this.src)">`
-                    ).join('')}
-                </div>
-            `;
-        }
+        const thumbnailsHtml = productGalleryImages.length > 1 ? `
+            <div class="product-thumbnail-gallery">
+                ${productGalleryImages.map((img, index) => `
+                    <img
+                        src="${img}"
+                        alt="${product.name} ${index + 1}"
+                        class="product-thumbnail ${index === currentGalleryIndex ? 'active' : ''}"
+                        onclick="changeMainImage(${index})"
+                    >
+                `).join('')}
+            </div>
+        ` : '';
+
+        const galleryNavigationHtml = productGalleryImages.length > 1 ? `
+            <button type="button" class="product-gallery-arrow left" aria-label="Προηγούμενη εικόνα" onclick="changeGalleryImage(-1)">
+                &#10094;
+            </button>
+            <button type="button" class="product-gallery-arrow right" aria-label="Επόμενη εικόνα" onclick="changeGalleryImage(1)">
+                &#10095;
+            </button>
+        ` : '';
+
+        const mainImage = productGalleryImages[0] || fixImagePath(product.image);
+        const categoryName = (product.category || '').split('>').pop().trim() || 'N/A';
 
         const productHTML = `
             <div class="product-gallery">
-                <img src="${fixImagePath(product.image)}" alt="${product.name}" class="product-main-image" id="mainImage">
-                ${extraImagesHtml}
+                <div class="product-main-image-wrapper">
+                    <img src="${mainImage}" alt="${product.name}" class="product-main-image" id="mainImage">
+                    ${galleryNavigationHtml}
+                </div>
+                ${thumbnailsHtml}
             </div>
 
             <div class="product-details-content">
@@ -53,7 +75,7 @@ async function loadProduct(id) {
                 <div class="product-meta">
                     <div class="meta-item">
                         <span class="meta-label">Κατηγορία:</span>
-                        <span class="meta-value">${product.category.split('>').pop().trim()}</span>
+                        <span class="meta-value">${categoryName}</span>
                     </div>
                     <div class="meta-item">
                         <span class="meta-label">Κατασκευαστής:</span>
@@ -105,6 +127,7 @@ async function loadProduct(id) {
         `;
 
         document.getElementById('productDetail').innerHTML = productHTML;
+        updateGalleryView();
     } catch (error) {
         console.error('Error loading product:', error);
         document.getElementById('productDetail').innerHTML = '<p>Σφάλμα κατά τη φόρτωση του προϊόντος</p>';
@@ -125,13 +148,29 @@ async function loadRecommendedProducts() {
     }
 }
 
-function changeMainImage(src) {
-    document.getElementById('mainImage').src = src;
+function updateGalleryView() {
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage && productGalleryImages[currentGalleryIndex]) {
+        mainImage.src = productGalleryImages[currentGalleryIndex];
+    }
 
-    document.querySelectorAll('.product-thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
+    document.querySelectorAll('.product-thumbnail').forEach((thumb, index) => {
+        thumb.classList.toggle('active', index === currentGalleryIndex);
     });
-    event.target.classList.add('active');
+}
+
+function changeMainImage(index) {
+    currentGalleryIndex = index;
+    updateGalleryView();
+}
+
+function changeGalleryImage(step) {
+    if (productGalleryImages.length < 2) {
+        return;
+    }
+
+    currentGalleryIndex = (currentGalleryIndex + step + productGalleryImages.length) % productGalleryImages.length;
+    updateGalleryView();
 }
 
 function addToCartFromDetail() {

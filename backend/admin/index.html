@@ -266,6 +266,32 @@
                                         <div class="form-group">
                                             <label for="productImage">Εικόνα Προϊόντος</label>
                                             <input type="file" id="productImage" name="image" accept="image/*">
+                                            <small id="productImageCurrent" style="display:block; margin-top:6px; color:#666;"></small>
+                                            <label style="display:block; margin-top:6px; font-size:13px; color:#555;">
+                                                <input type="checkbox" id="removeProductImage" name="remove_image" value="1">
+                                                Αφαίρεση τρέχουσας εικόνας
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="productExtraImage1">2η Εικόνα Προϊόντος</label>
+                                            <input type="file" id="productExtraImage1" name="extra_image_1" accept="image/*">
+                                            <small id="productExtraImage1Current" style="display:block; margin-top:6px; color:#666;"></small>
+                                            <label style="display:block; margin-top:6px; font-size:13px; color:#555;">
+                                                <input type="checkbox" id="removeProductExtraImage1" name="remove_extra_image_1" value="1">
+                                                Αφαίρεση τρέχουσας 2ης εικόνας
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="productExtraImage2">3η Εικόνα Προϊόντος</label>
+                                            <input type="file" id="productExtraImage2" name="extra_image_2" accept="image/*">
+                                            <small id="productExtraImage2Current" style="display:block; margin-top:6px; color:#666;"></small>
+                                            <label style="display:block; margin-top:6px; font-size:13px; color:#555;">
+                                                <input type="checkbox" id="removeProductExtraImage2" name="remove_extra_image_2" value="1">
+                                                Αφαίρεση τρέχουσας 3ης εικόνας
+                                            </label>
                                         </div>
                                     </div>
 
@@ -280,6 +306,14 @@
                             <!-- Products List Section -->
                             <section class="admin-section">
                                 <h3>Προϊόντα</h3>
+                                <div style="margin-bottom: 15px;">
+                                    <input
+                                        type="text"
+                                        id="productsSearchInput"
+                                        placeholder="Αναζήτηση προϊόντος με όνομα ή ID"
+                                        style="width: 100%; max-width: 420px; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;"
+                                    >
+                                </div>
                                 <div id="productsList" class="list-items"></div>
                                 <div id="productsPagination" class="pagination"></div>
                             </section>
